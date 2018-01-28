@@ -83,6 +83,10 @@ def publish(*args, context=None, **kwargs):
     site_configuration = get_configuration().site.toDict()
     recursive_update(context.setdefault('site', {}), site_configuration)
 
+    # Insert all of the template variables into the context as well
+    template_variables = _template_configuration.get('variables', {})
+    recursive_update(context.setdefault('template', {}), template_variables)
+
     # Find the template definition object
     template_definition = _template_configuration.get('templates', {})
     for template_path in args:
