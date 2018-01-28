@@ -13,6 +13,7 @@ def template_start(**kwargs):
     """Start a new template."""
     post = timeline_start(**kwargs)
     post.metadata['mkl-project'] = None
+    post.meatdata['activities'].append('project')
 
     return post
 

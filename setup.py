@@ -54,6 +54,7 @@ setup(
                               'dump_config=autology.commands.subcommands.dump_config:register_command',
                               'update=autology.commands.subcommands.update:register_command',
                               'mkl_project=autology.commands.subcommands.mkl_project:register_command',
+                              'inject=autology.commands.subcommands.inject:register_command',
                               ],
         'autology_templates': ['timeline_base=autology.reports.timeline.template:register_template',
                                'project_base=autology.reports.project.template:register_template',

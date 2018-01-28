@@ -27,7 +27,7 @@ def template_start(start_time=None, end_time=None, **kwargs):
         fm_keys.TIME: start_time,
         fm_keys.END_TIME: end_time,
         fm_keys.LOCATION: 'home',
-        fm_keys.ACTIVITIES: None,
+        fm_keys.ACTIVITIES: [],
         fm_keys.AGENT_DEFINITION: {
             fm_keys.AGENT_NAME: PACKAGE_NAME,
             fm_keys.AGENT_VERSION: pkg_resources.require(PACKAGE_NAME)[0].version,

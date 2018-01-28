@@ -76,7 +76,11 @@ def walk_log_files(directories):
                 file_processor = get_file_processor(file_component)
 
                 if file_processor:
-                    entries = file_processor.load(file_component)
+                    try:
+                        entries = file_processor.load(file_component)
+                    except KeyError:
+                        print('Error processing file: {}'.format(file_component))
+                        continue
 
                     if entries:
                         # entries is either a log entry data model or a list of them.

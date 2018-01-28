@@ -10,8 +10,8 @@ try:
 except ImportError:
     from yaml import Loader
 from dict_recursive_update import recursive_update as _r_update
-from autology.utilities import log_file as log_file_utils
 from autology.reports.timeline import keys as fm_keys
+from autology.reports.project import injector
 
 # Constants:
 PROJECT_KEY = 'mkl-project'
@@ -29,6 +29,7 @@ _defined_customers = {}
 def register_plugin():
     """ Subscribe to the initialize method and add default configuration values to the settings object. """
     topics.Application.INITIALIZE.subscribe(_initialize)
+    injector.register_injector()
 
 
 def _initialize():
