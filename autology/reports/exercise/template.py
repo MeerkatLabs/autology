@@ -4,21 +4,21 @@ from autology.reports.timeline.template import template_start as timeline_start,
 
 
 def register_template():
-    description = 'Inherits from timeline_base template, but also provides additional details about a project that ' \
-                  'was being worked on while the note was open.'
-    return Template('project_base', template_start, template_end, description)
+    return Template('gpx_base', gpx_template_start, gpx_template_end,
+                    'Inherits from timeline base but provides the means of linking in gpx files for displaying maps, '
+                    'and activities.')
 
 
-def template_start(**kwargs):
+def gpx_template_start(**kwargs):
     """Start a new template."""
     post = timeline_start(**kwargs)
-    post.metadata['mkl-project'] = None
-    post.metadata['activities'].append('project')
+    post.metadata['gpx_file'] = '{}'.format(kwargs.pop('gpx_file', None))
+    post.metadata['activities'].append('exercise')
 
     return post
 
 
-def template_end(post, **kwargs):
+def gpx_template_end(post, **kwargs):
     """Post processing on the template after it has been saved by the user."""
     post = timeline_end(post, **kwargs)
 

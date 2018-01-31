@@ -103,3 +103,16 @@ def walk_log_files(directories):
                 yield entry
         else:
             yield loaded_entries
+
+
+def find_file(file_path):
+    """Iterate through all of the log defined paths in order to find the file pointed to by a relative path."""
+    configuration_settings = get_configuration()
+
+    for log_directory in configuration_settings.processing.inputs:
+        test_path = pathlib.Path(log_directory) / file_path
+
+        if test_path.exists():
+            return test_path
+
+    return None

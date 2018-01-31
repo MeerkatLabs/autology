@@ -29,7 +29,8 @@ setup(
         'GitPython>=2.1.7<3',
         'pytz>=2017.3<2018',
         'tzlocal>=1.5.1<2',
-        'semantic-version>=2.6.0',
+        'semantic-version>=2.6.0<3',
+        'gpxpy>=1.1.2<2',
     ],
 
     extras_require={
@@ -45,6 +46,7 @@ setup(
                              'publishing=autology.publishing:register_plugin',
                              'storage=autology.storage:register_plugin',
                              'simple=autology.reports.simple:register_plugin',
+                             'exercise=autology.reports.exercise.exercise:register_plugin',
                              ],
         'autology_commands': ['generate=autology.commands.subcommands.generate:register_command',
                               'serve=autology.commands.subcommands.serve:register_command',

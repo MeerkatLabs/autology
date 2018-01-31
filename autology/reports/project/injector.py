@@ -13,7 +13,7 @@ def register_injector():
     injectors.register_injector('mkl-project', handle_injection)
 
 
-def handle_injection(file=None, date=None):
+def handle_injection(file=None, start_time=None, end_time=None):
     """Inject the provided file into the date requested."""
 
     if file is None:
@@ -25,7 +25,7 @@ def handle_injection(file=None, date=None):
     file_processor = log_file.get_file_processor(injection_file)
 
     if file_processor.mime_type == yaml_processor.MIME_TYPE:
-        _inject_yaml_file(injection_file, date)
+        _inject_yaml_file(injection_file, start_time)
 
 
 def _inject_yaml_file(file_component, date):

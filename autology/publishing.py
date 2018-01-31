@@ -74,6 +74,25 @@ def publish(*args, context=None, **kwargs):
     :param kwargs:
     :return:
     """
+    context = _build_context(context=context, **kwargs)
+    template_definition = _find_template(*args)
+
+    # Load the template and render to the destination file defined in the template_definition
+    root_template = _environment.get_template(str(template_definition['template']))
+    output_file = template_definition['destination'].format(**context)
+    output_content = root_template.render(context)
+    output_file = _output_path / output_file
+
+    # Verify that the path is possible and write out the file
+    output_file.parent.mkdir(exist_ok=True, parents=True)
+    output_file.write_text(output_content)
+
+    return output_file.relative_to(_output_path)
+
+
+def _build_context(context=None, **kwargs):
+    """Build up the context values based on the content provided."""
+
     # Build up the context argument, special kwarg context will be used to provide a starting dictionary
     if not context:
         context = {}
@@ -87,7 +106,11 @@ def publish(*args, context=None, **kwargs):
     template_variables = _template_configuration.get('variables', {})
     recursive_update(context.setdefault('template', {}), template_variables)
 
-    # Find the template definition object
+    return context
+
+
+def _find_template(*args):
+    """Find the template definition object"""
     template_definition = _template_configuration.get('templates', {})
     for template_path in args:
         try:
@@ -97,15 +120,26 @@ def publish(*args, context=None, **kwargs):
                   'in template definitions: {}'.format(args, _template_configuration.get('templates', {})))
             raise
 
-    # Load the template and render to the destination file defined in the template_definition
-    root_template = _environment.get_template(str(template_definition['template']))
+    return template_definition
+
+
+def copy_file(file, *args, context=None, **kwargs):
+    """
+    Copy a file in place based on the arguments provided and the kwargs that are used to generate the path.
+    :param file:
+    :param args:
+    :param context:
+    :param kwargs:
+    :return:
+    """
+    context = _build_context(context=context, **kwargs)
+    template_definition = _find_template(*args)
+
     output_file = template_definition['destination'].format(**context)
-    output_content = root_template.render(context)
     output_file = _output_path / output_file
 
-    # Verify that the path is possible and write out the file
-    output_file.parent.mkdir(exist_ok=True)
-    output_file.write_text(output_content)
+    output_file.parent.mkdir(exist_ok=True, parents=True)
+    shutil.copy(str(file), str(output_file))
 
     return output_file.relative_to(_output_path)
 

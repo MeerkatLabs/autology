@@ -66,7 +66,7 @@ class SimpleReportPlugin:
         topics.Processing.DAY_END.subscribe(self._end_day_processing)
         topics.Processing.END.subscribe(self._end_processing)
 
-    def _start_day_processing(self, date=None):
+    def _start_day_processing(self, date):
         """
         Event handler that will be notified when a day's files are starting to be processed.
         :param date: the day that is being processed.
@@ -88,7 +88,16 @@ class SimpleReportPlugin:
 
         activities_list = entry.metadata.get(fm_keys.ACTIVITIES, [])
         if self.test_activities(activities_list):
+            self._preprocess_entry(entry)
             self._day_content.append(entry)
+
+    def _preprocess_entry(self, entry):
+        """
+        Process the entry before storing it in the day content for the value.
+        :param entry:
+        :return:
+        """
+        pass
 
     def _end_day_processing(self, date=None):
         """Publish the content of the collated day together."""

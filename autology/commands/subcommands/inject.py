@@ -19,6 +19,7 @@ def register_command(subparser):
     parser.add_argument('-f', '--file', help='Specify the content that should be injected.  If none, the injector is '
                                              'expected to have a default action which doesn\'t require a file')
     parser.add_argument('-d', '--date', help='Specify the date that the file should be injected into')
+    parser.add_argument('-D', '--end-date', help='Specify the date that the file should end')
 
 
 def _main(args):
@@ -29,6 +30,13 @@ def _main(args):
         print('Could not find injector defined by: {}'.format(args.injector))
         return
 
-    date_value = tzlocal.get_localzone().localize(datetime.strptime(args.date, DATE_FORMAT))
+    start_time = None
+    end_time = None
 
-    injector(args.file, date_value)
+    if args.date is not None:
+        start_time = tzlocal.get_localzone().localize(datetime.strptime(args.date, DATE_FORMAT))
+
+    if args.end_date is not None:
+        end_time = tzlocal.get_localzone().localize(datetime.strptime(args.end_date, DATE_FORMAT))
+
+    injector(args.file, start_time, end_time)
