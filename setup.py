@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='autology',
-    version='0.3.0-dev',
+    version='0.3.0',
     packages=find_packages(),
     url='https://github.com/MeerkatLabs/autology/',
     license='MIT',
