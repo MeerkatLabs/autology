@@ -41,7 +41,7 @@ remote and refspec will allow the make_note sub-command to push the changes to t
 
 ### Configuring Editor
 
-By default, the editor used to modify the text files is `xdg-open`.  Depending on the editor that currently set as the 
+By default, the editor used to modify the text files is `xdg-open`.  Depending on the editor that is currently set as the 
 default, this may not work correctly.  For example, executing `gvim` will automatically return when the editor is 
 opened instead of waiting for the user to save and close the file.  To get around this, you will need to set the value
 of the editor to something more sane.  To continue the example of gvim, the setting is:

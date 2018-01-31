@@ -1,6 +1,6 @@
 # Git Storage Plugin
 
-This plugin is responsible for wrapping the git repostiory that the content files will be stored in.  Currently, this 
+This plugin is responsible for wrapping the git repository that the content files will be stored in.  Currently, this 
 is the only storage plugin that is available.
 
 ## Configuration

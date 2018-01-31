@@ -39,7 +39,7 @@ filename extension that is provided.
 
 The processor will split the markdown files into the front matter meta data and the content.  It hands the content of 
 the front matter to the YAML Data parser to determine if there are new projects, customers, or organizations defined. 
-Please see the next section for documentation on that functionality.
+Please see the next section below for documentation on that functionality.
 
 In addition to looking for new definitions, it is also responsible for determining the time tracking values for projects
 that are defined elsewhere.  In this case it will look to see if the `mkl-project` key exists and will then use that 
