@@ -4,6 +4,7 @@ from pkg_resources import iter_entry_points
 
 from autology import topics
 from autology.configuration import load_configuration_file as _load_configuration_file
+from autology.utilities.plugins import COMMANDS_ENTRY_POINT
 
 
 def _build_arguments():
@@ -13,16 +14,10 @@ def _build_arguments():
 
     # Process all of the sub-commands that have been registered
     subparsers = parser.add_subparsers(help='sub-command help')
-    for ep in iter_entry_points(group='autology_commands'):
+    for ep in iter_entry_points(group=COMMANDS_ENTRY_POINT):
         ep.load()(subparsers)
 
     return parser
-
-
-def _load_plugins():
-    """Load plugins that are defined in setup.py"""
-    for ep in iter_entry_points(group='autology_plugins'):
-        ep.load()()
 
 
 def main():
@@ -30,8 +25,10 @@ def main():
     parser = _build_arguments()
     args = parser.parse_args()
 
-    # Load the plugins and allow them to set default properties in the configuration data object.
-    _load_plugins()
+    # Allow the command to load up any configuration details that need to be loaded in before the configuration
+    # file is loaded in and overrides any defaults.
+    if hasattr(args, 'configure'):
+        args.configure()
 
     # Override the default values in configuration with the values from settings file.
     _load_configuration_file(args.config)

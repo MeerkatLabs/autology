@@ -10,8 +10,7 @@ try:
 except ImportError:
     from yaml import Loader
 from dict_recursive_update import recursive_update as _r_update
-from autology.reports.timeline import keys as fm_keys
-from autology.reports.project import injector
+from autology.utilities import log_file
 
 # Constants:
 PROJECT_KEY = 'mkl-project'
@@ -29,7 +28,6 @@ _defined_customers = {}
 def register_plugin():
     """ Subscribe to the initialize method and add default configuration values to the settings object. """
     topics.Application.INITIALIZE.subscribe(_initialize)
-    injector.register_injector()
 
 
 def _initialize():
@@ -84,7 +82,7 @@ def process_file(entry):
         if entry.mime_type == 'text/markdown':
             _process_markdown(entry)
         elif entry.mime_type == 'application/x-yaml':
-            _process_yaml(entry.content)
+            _process_yaml(entry.python)
     except:
         print('Error processing file: {}'.format(entry.file))
         import traceback
@@ -94,7 +92,7 @@ def process_file(entry):
 
 def _process_markdown(post):
     """Process the front-matter contents, and store the markdown if necessary."""
-    _process_yaml(post.metadata)
+    _process_yaml([post.metadata])
 
     if PROJECT_KEY in post.metadata and post.metadata[PROJECT_KEY] and not isinstance(post.metadata[PROJECT_KEY], dict):
 
@@ -105,8 +103,8 @@ def _process_markdown(post):
         project_log.append(post)
 
         # Calculate how long the event lasts
-        log_date = post.metadata[fm_keys.TIME]
-        log_end_date = post.metadata[fm_keys.END_TIME]
+        log_date = post.metadata[log_file.MetaKeys.TIME]
+        log_end_date = post.metadata[log_file.MetaKeys.END_TIME]
         duration = log_end_date - log_date
         time_on_project = project_definition.get('duration', datetime.timedelta())
         project_definition['duration'] = time_on_project + duration
@@ -115,33 +113,35 @@ def _process_markdown(post):
         post.metadata['duration'] = duration
 
 
-def _process_yaml(document):
+def _process_yaml(documents):
     """Process the document update data structures according to the data values."""
-    # Figure out if any of the documents contain definitions of project/organization/customers and if so, see if
-    # the documents define them (i.e. have dictionaries), or if the document is just about the data.
-    if PROJECT_KEY in document:
 
-        project_definition = document[PROJECT_KEY]
-        if not isinstance(project_definition, dict):
-            return
+    for document in documents:
+        # Figure out if any of the documents contain definitions of project/organization/customers and if so, see if
+        # the documents define them (i.e. have dictionaries), or if the document is just about the data.
+        if PROJECT_KEY in document:
 
-        _handle_project_definition(project_definition)
+            project_definition = document[PROJECT_KEY]
+            if not isinstance(project_definition, dict):
+                return
 
-    elif ORGANIZATION_KEY in document:
+            _handle_project_definition(project_definition)
 
-        organization_definition = document[ORGANIZATION_KEY]
-        if not isinstance(organization_definition, dict):
-            return
+        elif ORGANIZATION_KEY in document:
 
-        _handle_organization_definition(organization_definition)
+            organization_definition = document[ORGANIZATION_KEY]
+            if not isinstance(organization_definition, dict):
+                return
 
-    elif CUSTOMER_KEY in document:
+            _handle_organization_definition(organization_definition)
 
-        customer_definition = document[CUSTOMER_KEY]
-        if not isinstance(customer_definition, dict):
-            return
+        elif CUSTOMER_KEY in document:
 
-        _handle_customer_definition(customer_definition)
+            customer_definition = document[CUSTOMER_KEY]
+            if not isinstance(customer_definition, dict):
+                return
+
+            _handle_customer_definition(customer_definition)
 
 
 def _handle_organization_definition(definition):

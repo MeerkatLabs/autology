@@ -1,37 +1,35 @@
 """Sub-command that will create a new note file for the log."""
-import datetime
-import pathlib
 import subprocess
-import tzlocal
+import textwrap
 
-import frontmatter
 from pkg_resources import iter_entry_points
 
 from autology import topics
-from autology.configuration import add_default_configuration, get_configuration, get_configuration_root
-from autology.reports.timeline.processors import markdown as md_loader
-
-
-DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
+from autology.configuration import add_default_configuration, get_configuration
+from autology.storage import load as load_storage_plugin
+from autology.utilities.log_file import get_file_processor
+from autology.utilities.plugins import TEMPLATES_ENTRY_POINT, FILE_PROCESSOR_ENTRY_POINT
 
 
 def register_command(subparser):
     """Register the sub-command with any additional arguments."""
     parser = subparser.add_parser('make_note', help='Create a new note object.')
     parser.set_defaults(func=_main)
+    parser.set_defaults(configure=_configure)
 
     parser.add_argument('--template-list', '-T', help='List all of the templates that are available',
                         action='store_true')
     parser.add_argument('--template', '-t', help='Specify the template file that will be used',
                         default=None)
-    parser.add_argument('--start-date', '-d',
-                        help='Specify the start time for the note that will be added.  Format is '
-                             + DATE_FORMAT.replace('%', '%%'),
-                        default=None)
-    parser.add_argument('--end-date', '-D',
-                        help='Specify the end time for the note that will be added.  Format is '
-                             + DATE_FORMAT.replace('%', '%%'),
-                        default=None)
+
+    parser.add_argument('--kwarg-list', '-K', help='List the arguments associated with the selected template',
+                        action='store_true')
+
+    parser.add_argument('--kwarg', '-k', help='Specify key/value pairs to be provided to the template during '
+                                              'definition.  These are defined as KEY=value.  Keys cannot contain '
+                                              'spaces, but values may.  In such a case, quote the entire key/value'
+                                              'string.',
+                        action='append', metavar='KEY=VALUE')
 
     add_default_configuration('make_note',
                               {
@@ -40,75 +38,85 @@ def register_command(subparser):
                               })
 
 
+def _configure():
+    """Load up the configuration details for the storage component."""
+    for entry_point in iter_entry_points(group=FILE_PROCESSOR_ENTRY_POINT):
+        entry_point.load()()
+
+    load_storage_plugin()
+
+
 def _main(args):
     """ Create a new note file in the correct location. """
-    loaded_templates = {}
-
-    for ep in iter_entry_points(group='autology_templates'):
-        template_object = ep.load()()
-
-        if not isinstance(template_object, list):
-            template_object = [template_object]
-
-        for to in template_object:
-            loaded_templates[to.name] = to
-
-    template_name = args.template if args.template is not None else get_configuration().make_note.default_template
-
-    template = loaded_templates[template_name]
+    loaded_templates = {ep.name: ep.load() for ep in iter_entry_points(group=TEMPLATES_ENTRY_POINT)}
 
     if args.template_list:
         print('Available templates:')
-        for key in loaded_templates.keys():
-            print('  {} - {}'.format(key, loaded_templates[key].description))
+
+        _print_documentation_help({key: value.description for key, value in loaded_templates.items()})
+
+        return
+
+    # Load up the template in order to print detailed information about arguments, or to create a new note.
+    template_name = args.template if args.template is not None else get_configuration().make_note.default_template
+    template = loaded_templates[template_name]
+
+    if args.kwarg_list:
+        print('Template Name: {}'.format(template_name))
+        print('Description:   {}'.format(template.description))
+        print('Arguments: ')
+
+        _print_documentation_help(template.arguments)
     else:
-        start_date = args.start_date
-        end_date = args.end_date
+        kwargs = {}
+        # Need to split all of the kwargs into a dictionary.
+        if args.kwarg:
+            kwargs = dict(kv.split('=') for kv in args.kwarg)
 
-        if start_date:
-            start_date = tzlocal.get_localzone().localize(datetime.datetime.strptime(start_date, DATE_FORMAT))
-        else:
-            start_date = tzlocal.get_localzone().localize(datetime.datetime.now())
+        # Create the new entry
+        post = template.start(**kwargs)
 
-        if end_date:
-            end_date = tzlocal.get_localzone().localize(datetime.datetime.strptime(end_date, DATE_FORMAT))
+        # Save the post and update the object to get the filename where the file is stored.
+        file_processor = get_file_processor(mime_type=post.mime_type)
+        if file_processor is None:
+            raise KeyError('Cannot find processor for mime_type: {}'.format(post.mime_type))
 
-        _create_note(template, start_date, end_date)
+        post = file_processor.write(post)
+
+        # Builds the list of command arguments and executes the editor.
+        commands = [a.format(file=post.file) for a in get_configuration().make_note.editor.split()]
+        subprocess.run(commands)
+
+        # Now need to reload the contents of the file, and convert all of the time values
+        post = file_processor.load(post.file)
+
+        # Finish up the template code and write the file back out to the file system
+        template.end(post)
+        file_processor.write(post)
+
+        # Notify the storage engine that everything is finished, and the file can be sent to the remote
+        topics.Storage.FILE_ADDED.publish(file=post.file)
+        topics.Storage.FINISHED_MODIFICATIONS.publish(message="New Note from autology make_note")
+        topics.Storage.PULL_CHANGES.publish()
+        topics.Storage.PUSH_CHANGES.publish()
 
 
-def _create_note(template, start_time, end_time):
-    """Create a new note and display an editor for that note."""
-    post = template.start(start_time=start_time, end_time=end_time)
+def _print_documentation_help(dictionary, initial_index='  '):
+    """
+    Creates a nice list of keys and definitions that can be used to describe the keys.
+    :param dictionary: keys and descriptions of the keys
+    :param initial_index: initial index that will be used for the keys
+    :return:
+    """
 
-    directory_structure = pathlib.Path(get_configuration().processing.inputs[0])
+    formatter = textwrap.TextWrapper(initial_indent=initial_index)
 
-    # Need to figure out the root directory for all of the path objects if they are relative.
-    if not directory_structure.is_absolute():
-        directory_structure = get_configuration_root() / directory_structure
+    # add three to the max value in order to have '  ' after each key.
+    template_length = max([len(key) for key in dictionary.keys()], default=0) + 3
 
-    directory_structure /= pathlib.Path(start_time.strftime('%Y')) / start_time.strftime('%m')
-    directory_structure /= pathlib.Path(start_time.strftime('%d'))
+    formatter.subsequent_indent = ' ' * template_length + formatter.initial_indent
 
-    directory_structure.mkdir(parents=True, exist_ok=True)
-
-    file_name = directory_structure / start_time.strftime('%H%M%S.md')
-
-    # Write out the file to the file_name
-    file_name.write_text(frontmatter.dumps(post))
-
-    commands = [a.format(file=file_name) for a in get_configuration().make_note.editor.split()]
-    subprocess.run(commands)
-
-    # Now need to reload the contents of the file, and convert all of the time values
-    post = md_loader.load_file(file_name)
-
-    template.end(post)
-
-    # Write out the results one last time with the final contents
-    file_name.write_text(frontmatter.dumps(post))
-
-    # Notify the storage engine that everything is finished, and the file can be sent to the remote
-    topics.Storage.FILE_ADDED.publish(file=file_name)
-    topics.Storage.FINISHED_MODIFICATIONS.publish(message="New Note from autology make_note")
-    topics.Storage.PULL_CHANGES.publish()
-    topics.Storage.PUSH_CHANGES.publish()
+    for key, value in dictionary.items():
+        spacing = ' ' * (template_length - len(key))
+        print(formatter.fill('{key}{spacing}{description}'.format(key=key, spacing=spacing, description=value)))
+        print()

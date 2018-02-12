@@ -6,7 +6,6 @@ from collections import namedtuple
 
 from autology import topics
 from autology.reports.simple import SimpleReportPlugin
-from autology.reports.timeline.processors import markdown as md_loader, yaml_processor as yaml_loader
 
 # The content that is stored for each individual day
 _day_content = []
@@ -25,8 +24,6 @@ def register_plugin():
     :return:
     """
     topics.Application.INITIALIZE.subscribe(_initialize)
-    md_loader.register()
-    yaml_loader.register()
 
 
 def _initialize():

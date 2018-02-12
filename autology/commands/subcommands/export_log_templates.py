@@ -3,6 +3,7 @@ import frontmatter
 from pkg_resources import iter_entry_points
 
 from autology.configuration import get_configuration_root
+from autology.utilities.plugins import TEMPLATES_ENTRY_POINT
 
 
 def register_command(subparser):
@@ -16,16 +17,7 @@ def register_command(subparser):
 
 def _main(args):
     """Dumps all of the templates to the output directory provided by args."""
-    loaded_templates = {}
-
-    for ep in iter_entry_points(group='autology_templates'):
-        template_object = ep.load()()
-
-        if not isinstance(template_object, list):
-            template_object = [template_object]
-
-        for to in template_object:
-            loaded_templates[to.name] = to
+    loaded_templates = {ep.name: ep.load() for ep in iter_entry_points(group=TEMPLATES_ENTRY_POINT)}
 
     output_directory = get_configuration_root() / args.output_dir
 

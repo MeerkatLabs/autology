@@ -18,7 +18,7 @@ _markdown_conversion = None
 _template_configuration = {}
 
 
-def register_plugin():
+def load():
     """
     Subscribe to the initialize method and add default configuration values to the settings object.
     :return:

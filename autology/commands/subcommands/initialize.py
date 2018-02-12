@@ -2,17 +2,35 @@
 import pathlib
 
 from autology.configuration import get_configuration, dump_configuration
-from autology.utilities import templates as template_utilities
+from autology.utilities import templates as template_utilities, plugins
+from autology.publishing import load as load_publishing_plugin
+from autology.storage import load as load_storage_plugin
+from pkg_resources import iter_entry_points
 
 
 def register_command(subparser):
     """Register the sub-command with any additional arguments."""
     parser = subparser.add_parser('init', help='Initialize area for gathering content.')
     parser.set_defaults(func=_main)
+    parser.set_defaults(configure=_configure)
 
     parser.add_argument('--output-dir', '-o', default='.', help='Directory that will be used for gathering content')
     parser.add_argument('--template_definition', '-t', default=template_utilities.DEFAULT_TEMPLATES_URL,
                         help='URL Containing the templates that will be used for generating content')
+
+
+def _configure():
+    """
+    Load all of the plugins and inject the configuration into the config.yaml file.
+    """
+    for entry_point in iter_entry_points(group=plugins.REPORTS_ENTRY_POINT):
+        entry_point.load()()
+
+    for entry_point in iter_entry_points(group=plugins.FILE_PROCESSOR_ENTRY_POINT):
+        entry_point.load()()
+
+    load_publishing_plugin()
+    load_storage_plugin()
 
 
 def _main(args):

@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='autology',
-    version='0.3.0',
+    version='0.4.0dev',
     packages=find_packages(),
     url='https://github.com/MeerkatLabs/autology/',
     license='MIT',
@@ -40,14 +40,17 @@ setup(
 
     entry_points={
         'console_scripts': ['autology=autology.commands.main:main'],
-        'autology_plugins': ['index_report=autology.reports.index:register_plugin',
+
+        # These are the reports that should be loaded
+        'autology_reports': ['index_report=autology.reports.index:register_plugin',
                              'timeline_report=autology.reports.timeline:register_plugin',
                              'project_report=autology.reports.project:register_plugin',
-                             'publishing=autology.publishing:register_plugin',
-                             'storage=autology.storage:register_plugin',
                              'simple=autology.reports.simple:register_plugin',
                              'exercise=autology.reports.exercise.exercise:register_plugin',
                              ],
+
+        # Commands that are defined as execution points.  These are methods that take an arg parser as it's only
+        # argument.
         'autology_commands': ['generate=autology.commands.subcommands.generate:register_command',
                               'serve=autology.commands.subcommands.serve:register_command',
                               'init=autology.commands.subcommands.initialize:register_command',
@@ -55,11 +58,17 @@ setup(
                               'export_log_template=autology.commands.subcommands.export_log_templates:register_command',
                               'dump_config=autology.commands.subcommands.dump_config:register_command',
                               'update=autology.commands.subcommands.update:register_command',
-                              'mkl_project=autology.commands.subcommands.mkl_project:register_command',
-                              'inject=autology.commands.subcommands.inject:register_command',
                               ],
-        'autology_templates': ['timeline_base=autology.reports.timeline.template:register_template',
-                               'project_base=autology.reports.project.template:register_template',
+
+        # These are instantiations of Template named tuples
+        'autology_templates': ['timeline_base=autology.reports.timeline.template:timeline_base',
+                               'project_base=autology.reports.project.template.project_base:project_base',
+                               'project_yaml=autology.reports.project.template.project_yaml:project_yaml',
+                               'gpx_data=autology.reports.exercise.template:gpx_data'
                                ],
+
+        # File processors that are loaded in
+        'autology_file_processors': ['markdown=autology.utilities.processors.markdown:register',
+                                     'yaml=autology.utilities.processors.yaml:register']
     }
 )

@@ -10,8 +10,8 @@ from autology import topics
 from autology.configuration import add_default_configuration, get_configuration
 from autology.publishing import publish
 from autology.reports.models import Report
-from autology.reports.timeline import keys as fm_keys
-from autology.reports.timeline.processors import markdown as md_loader
+from autology.utilities.log_file import MetaKeys
+from autology.utilities.processors import markdown as md_loader
 
 DayReport = namedtuple('DayReport', 'date url num_entries')
 
@@ -86,7 +86,7 @@ class SimpleReportPlugin:
         if entry.mime_type is not md_loader.MIME_TYPE:
             return
 
-        activities_list = entry.metadata.get(fm_keys.ACTIVITIES, [])
+        activities_list = entry.metadata.get(MetaKeys.ACTIVITIES, [])
         if self.test_activities(activities_list):
             self._preprocess_entry(entry)
             self._day_content.append(entry)
@@ -104,7 +104,7 @@ class SimpleReportPlugin:
         # Only if there is content to publish
         if self._day_content:
             url = publish(*self.day_template_path,
-                          entries=sorted(self._day_content, key=lambda x: x.metadata[fm_keys.TIME]),
+                          entries=sorted(self._day_content, key=lambda x: x.metadata[MetaKeys.TIME]),
                           date=date, id=self.id, name=self.name, description=self.description)
             self._dates.append(DayReport(date=datetime.combine(date=date, time=time.min), url=url,
                                          num_entries=len(self._day_content)))

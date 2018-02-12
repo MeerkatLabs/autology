@@ -1,6 +1,5 @@
 """Report that builds the index file."""
 import datetime
-import pathlib
 
 from autology import topics
 from autology.publishing import publish

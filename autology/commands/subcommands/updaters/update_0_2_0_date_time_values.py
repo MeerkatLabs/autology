@@ -6,7 +6,7 @@ import tzlocal
 
 from semantic_version import Version
 
-from autology.reports.timeline import keys as fm_keys
+from autology.utilities.log_file import MetaKeys
 
 import datetime
 import pytz
@@ -29,8 +29,8 @@ def change_date_time_values(search_path, file_component):
     entry = frontmatter.load(file_component)
 
     # Can assume that the entry has the agent definition data because it passed through the previous values
-    agent_definition = entry[fm_keys.AGENT_DEFINITION]
-    version = Version.coerce(agent_definition[fm_keys.FILE_VERSION])
+    agent_definition = entry[MetaKeys.AGENT_DEFINITION]
+    version = Version.coerce(agent_definition[MetaKeys.Agent.FILE_VERSION])
 
     if version >= FILE_VERSION_INFORMATION:
         return
@@ -46,9 +46,9 @@ def change_date_time_values(search_path, file_component):
     start_date = _get_start_time(date, entry.metadata, file_component, tzinfo=local_timezone)
     end_time = _get_end_time(start_date, entry.metadata, tzinfo=local_timezone)
 
-    entry.metadata[fm_keys.TIME] = start_date
-    entry.metadata[fm_keys.END_TIME] = end_time
-    entry.metadata[fm_keys.AGENT_DEFINITION][fm_keys.FILE_VERSION] = "{}".format(FILE_VERSION_INFORMATION)
+    entry.metadata[MetaKeys.TIME] = start_date
+    entry.metadata[MetaKeys.END_TIME] = end_time
+    entry.metadata[MetaKeys.AGENT_DEFINITION][MetaKeys.Agent.FILE_VERSION] = "{}".format(FILE_VERSION_INFORMATION)
 
     with open(file_component, "w") as output_file:
         output_file.write(frontmatter.dumps(entry))

@@ -2,7 +2,6 @@
 Process all of the content for the exercise details, and calculate the number of miles that have been done from all of
 the gpx files that have been stored.
 """
-from autology.reports.exercise import injector
 from autology import topics, publishing
 from autology.utilities import log_file
 import gpxpy
@@ -20,7 +19,6 @@ _report_plugin = None
 
 def register_plugin():
     """ Subscribe to the initialize method and add default configuration values to the settings object. """
-    injector.register_injector()
     topics.Application.INITIALIZE.subscribe(_initialize)
 
 

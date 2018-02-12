@@ -1,13 +1,32 @@
 """Sub command that will generate the content of the static site."""
+from pkg_resources import iter_entry_points
+
+
 from autology import topics
 from autology.configuration import get_configuration
-from autology.utilities import log_file
+from autology.publishing import load as load_publishing_plugin
+from autology.utilities import log_file, plugins
 
 
 def register_command(subparser):
     """Register the sub-command with any additional arguments."""
     generator_parser = subparser.add_parser('generate', help='Generate the static content')
     generator_parser.set_defaults(func=_main)
+    generator_parser.set_defaults(configure=_configure)
+
+
+def _configure():
+    """
+    Load up the report plugins and allow them to insert their configuration details into the default configuration
+    object.
+    """
+    for entry_point in iter_entry_points(group=plugins.REPORTS_ENTRY_POINT):
+        entry_point.load()()
+
+    for entry_point in iter_entry_points(group=plugins.FILE_PROCESSOR_ENTRY_POINT):
+        entry_point.load()()
+
+    load_publishing_plugin()
 
 
 def _main(args):

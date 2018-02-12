@@ -13,7 +13,7 @@ from autology.configuration import get_configuration_root, add_default_configura
 _repo = None
 
 
-def register_plugin():
+def load():
     """Initializes the git module for the directory that the configuration file is currently being stored in."""
     topics.Application.INITIALIZE.subscribe(_initialization)
 
