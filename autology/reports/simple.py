@@ -25,6 +25,8 @@ def register_plugin():
     """
     topics.Application.INITIALIZE.subscribe(_initialize)
 
+    # TODO: Update to be a bit more configurable, change activities to definitions, then allow for activities to be
+    # defined as part of the definition.
     add_default_configuration('simple', {
         'activities': []
     })
