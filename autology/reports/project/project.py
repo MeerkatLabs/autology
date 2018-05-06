@@ -4,6 +4,7 @@ import datetime
 from autology import topics
 from autology.publishing import publish
 from autology.reports.models import Report
+from autology.utilities.log_file import MetaKeys
 
 try:
     from yaml import CLoader as Loader
@@ -77,6 +78,11 @@ def process_file(entry):
 
     It is not guaranteed that the files that are being processed will be processed in order.
     """
+
+    activities_list = entry.metadata.get(MetaKeys.ACTIVITIES, [])
+
+    if 'project' not in activities_list:
+        return
 
     try:
         if entry.mime_type == 'text/markdown':
