@@ -52,6 +52,16 @@ This command is configured using command line arguments.
   > parameter in quotes because the value takes a space.  See 
   > [Pythons Strftime](https://docs.python.org/3/library/time.html#time.strftime) documentation for details on this
   > format.
+  
+- `-K` or `--kwarg-list`
+
+  > List all of the keyword arguments that can be provided to this template.  Specifying this argument will cause the
+  > command to exit after the list has been printed out.
+  
+- `-k` or `--kwarg`
+
+  > Specify the key value definition to the template.  This should be in the format of KEY=VALUE.  Use quotes if 
+  > necessary.
 
 ## Example Execution
 
