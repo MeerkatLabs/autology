@@ -35,7 +35,7 @@ def _configure():
 
 def _main(args):
     """Generate the content for storage."""
-    main_path = pathlib.Path(args.output_dir)
+    main_path = pathlib.Path(args.output_dir).resolve()
 
     main_path.mkdir(exist_ok=True)
 
@@ -52,7 +52,7 @@ def _main(args):
 
     # Override the configuration details with the new template path.  This should probably be handled by the publishing
     # plugin, but for now this will work
-    settings.publishing.templates = str(templates_path)
+    settings.publishing.templates = str(templates_path.relative_to(main_path))
     configuration_file_path = main_path / 'config.yaml'
 
     dump_configuration(configuration_file_path, settings)

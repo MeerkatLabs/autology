@@ -62,7 +62,7 @@ def _update_template(template_path):
 
         # Override the configuration details with the new template path.  This should probably be handled by the
         # publishing plugin, but for now this will work
-        settings.publishing.templates = str(templates_path)
+        settings.publishing.templates = str(templates_path.relative_to(get_configuration_root()))
         configuration_file_path = get_configuration_root() / 'config.yaml'
 
         dump_configuration(configuration_file_path, settings)
