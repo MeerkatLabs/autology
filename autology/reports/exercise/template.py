@@ -4,11 +4,14 @@ import pathlib
 import gpxpy
 import pytz
 import tzlocal
+import logging
 
 from autology.reports.models import Template
 from autology.utilities import log_file
 from autology.reports.timeline.template import template_start as timeline_start, template_end as timeline_end, \
     timeline_base
+
+logger = logging.getLogger(__name__)
 
 
 def gpx_template_start(gpx_file=None, **kwargs):
@@ -53,7 +56,7 @@ def _process_gpx_file(file=None):
     """Inject the provided file into the date requested."""
 
     if file is None:
-        print('Cannot handle null file')
+        logger.error('Cannot handle null file')
         return
 
     try:
@@ -76,7 +79,7 @@ def _process_gpx_file(file=None):
 
         return dict(start_time=start_time, end_time=end_time, gpx_file=str(gpx_file))
     except gpxpy.gpx.GPXXMLSyntaxException:
-        print('Cannot import file: {}'.format(file))
+        logger.exception('Cannot import file: {}'.format(file))
 
 
 gpx_data = Template(gpx_template_start, gpx_template_end,

@@ -2,6 +2,7 @@
 Provides wrapper around common publishing functionality.
 """
 import pathlib
+import logging
 
 import markdown
 import shutil
@@ -12,6 +13,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from autology import topics
 from autology.configuration import add_default_configuration, get_configuration
 
+logger = logging.getLogger(__name__)
 _environment = None
 _output_path = None
 _markdown_conversion = None
@@ -115,9 +117,9 @@ def _find_template(*args):
     for template_path in args:
         try:
             template_definition = template_definition[template_path]
-        except KeyError:
-            print('Cannot find template definition: {} '
-                  'in template definitions: {}'.format(args, _template_configuration.get('templates', {})))
+        except KeyError as e:
+            logger.exception('Cannot find template definition: {} '
+                             'in template definitions: {}'.format(args, _template_configuration.get('templates', {})))
             raise
 
     return template_definition
@@ -168,7 +170,7 @@ def _copy_static_files():
     if static_files_list:
         for glob_definition in static_files_list:
             for file in template_path.glob(glob_definition):
-                print('Copying static file: {}'.format(file))
+                logger.debug('Copying static file: {}'.format(file))
 
                 # Make sure that the destination directory exists before copying the file into place
                 destination_parent = file.parent.relative_to(template_path)

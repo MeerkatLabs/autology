@@ -3,6 +3,7 @@ Log file updater that will translate all of the time and end_time values into ti
 """
 import frontmatter
 import tzlocal
+import logging
 
 from semantic_version import Version
 
@@ -11,6 +12,7 @@ from autology.utilities.log_file import MetaKeys
 import datetime
 import pytz
 
+logger = logging.getLogger(__name__)
 DEFAULT_EVENT_LENGTH = 60  # minutes
 FILE_VERSION_INFORMATION = Version.coerce('0.2.0')
 
@@ -37,7 +39,7 @@ def change_date_time_values(search_path, file_component):
 
     year, month, day = file_component.parent.relative_to(search_path).parts
 
-    print('Processing: {} {}/{}/{}'.format(file_component, year, month, day))
+    logger.info('Processing: {} {}/{}/{}'.format(file_component, year, month, day))
 
     date = datetime.date(int(year), int(month), int(day))
 
@@ -77,7 +79,7 @@ def _get_start_time(date, front_matter, file_path=None, tzinfo=pytz.utc):
         front_matter_value = front_matter['time']
         return_value = _parse_time_value(date, front_matter_value)
     else:
-        print('File: {} doesn\'t have a time value: '.format(file_path))
+        logger.warning('File: {} doesn\'t have a time value: '.format(file_path))
         return_value = datetime.datetime.combine(date, datetime.time.min)
 
     return tzinfo.localize(return_value)

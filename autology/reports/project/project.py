@@ -1,5 +1,6 @@
 """Processes the front data in the markdown files to process project stat recordings."""
 import datetime
+import logging
 
 from autology import topics
 from autology.publishing import publish
@@ -24,6 +25,8 @@ CUSTOMER_KEY = 'mkl-customer'
 _defined_projects = {}
 _defined_organizations = {}
 _defined_customers = {}
+
+logger = logging.getLogger(__name__)
 
 
 def register_plugin():
@@ -90,9 +93,7 @@ def process_file(entry):
         elif entry.mime_type == 'application/x-yaml':
             _process_yaml(entry.python)
     except:
-        print('Error processing file: {}'.format(entry.file))
-        import traceback
-        traceback.print_exc()
+        logger.exception('Error processing file: {}'.format(entry.file))
         raise
 
 

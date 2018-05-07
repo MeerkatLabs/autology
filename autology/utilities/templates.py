@@ -5,10 +5,11 @@ import yaml
 import io
 import re
 import shutil
+import logging
 from autology.configuration import get_configuration_root
 
 DEFAULT_TEMPLATES_URL = 'https://github.com/MeerkatLabs/autology_templates/archive/v0.3.0.zip'
-
+logger = logging.getLogger(__name__)
 
 def get_template_directory():
     """Provide the path to the template directory based on the main path (where the configuration file is located)."""
@@ -69,7 +70,8 @@ def _process_zip_file(template_file, templates_directory):
         destination_directory = templates_directory / dir_name
 
         if destination_directory.exists():
-            print('Cannot copy templates into place because directory: {} already exists'.format(destination_directory))
+            logger.error('Cannot copy templates into place because directory: {} already exists'.format(
+                destination_directory))
             return None
 
         template_definition_directory = template_definition_file.parent
@@ -95,13 +97,13 @@ def _process_zip_file(template_file, templates_directory):
 
 def _process_directory(template_file, templates_directory):
     """How to translate a cloned version of a template definition into an install (instead of a zip file)."""
-    print('template_path: {}'.format(template_file))
+    logger.debug('template_path: {}'.format(template_file))
     template_path = pathlib.Path(template_file)
 
     template_definition_file = None
     # Need to find the template definition file first.
     for template_definition_file in template_path.glob('**/template.yaml'):
-        print('found file: {}'.format(template_definition_file))
+        logger.debug('found file: {}'.format(template_definition_file))
         break
 
     if template_definition_file is None:
@@ -120,7 +122,8 @@ def _process_directory(template_file, templates_directory):
     try:
         shutil.copytree(template_definition_file.parent, destination_directory)
     except FileExistsError:
-        print('Cannot copy templates into place because directory: {} already exists'.format(destination_directory))
+        logger.error('Cannot copy templates into place because directory: {} already exists'.format(
+            destination_directory))
         return None
 
     return destination_directory

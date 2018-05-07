@@ -2,7 +2,7 @@ import argparse
 
 from pkg_resources import iter_entry_points
 
-from autology import topics
+from autology import topics, logging as autology_logging
 from autology.configuration import load_configuration_file as _load_configuration_file
 from autology.utilities.plugins import COMMANDS_ENTRY_POINT
 
@@ -25,6 +25,9 @@ def main():
     parser = _build_arguments()
     args = parser.parse_args()
 
+    # Load up default logging configuration
+    autology_logging.load()
+
     # Allow the command to load up any configuration details that need to be loaded in before the configuration
     # file is loaded in and overrides any defaults.
     if hasattr(args, 'configure'):
@@ -32,6 +35,9 @@ def main():
 
     # Override the default values in configuration with the values from settings file.
     _load_configuration_file(args.config)
+
+    # Configure the logging for all of the components
+    autology_logging.configure_logging()
 
     # Initialize all of the plugins in the architecture now that the settings have been loaded
     topics.Application.INITIALIZE.publish()

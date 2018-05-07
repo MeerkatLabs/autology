@@ -7,8 +7,10 @@ from autology.utilities import log_file
 import gpxpy
 import gpxpy.gpx
 import pytz
+import logging
 from autology.reports.simple import SimpleReportPlugin
 
+logger = logging.getLogger(__name__)
 EXERCISE_ACTIVITY = 'exercise'
 GPX_FILE = 'gpx_file'
 GPX_DATA = 'gpx_data'
@@ -75,4 +77,4 @@ class TimelineReport(SimpleReportPlugin):
                 entry.metadata['gpx_url'] = output_url
 
             except gpxpy.gpx.GPXXMLSyntaxException:
-                print('Cannot import file: {}'.format(gpx_file))
+                logger.exception('Cannot import file: {}'.format(gpx_file))

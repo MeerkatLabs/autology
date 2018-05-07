@@ -2,6 +2,7 @@
 import mimetypes
 import pathlib
 import shutil
+import logging
 
 import pytz
 from collections import namedtuple
@@ -10,6 +11,8 @@ from semantic_version import Version
 from autology.configuration import get_configuration, get_configuration_root
 from autology import topics
 
+
+logger = logging.getLogger(__name__)
 
 class MetaKeys:
     # Current version allowed by
@@ -109,8 +112,8 @@ def walk_log_files(directories):
                 if file_processor:
                     try:
                         entries = file_processor.load(file_component)
-                    except KeyError:
-                        print('Error processing file: {}'.format(file_component))
+                    except KeyError as e:
+                        logger.exception('Error processing file: {}'.format(file_component))
                         continue
 
                     if entries:
