@@ -1,18 +1,27 @@
 from setuptools import find_packages, setup
+from os import path
+
+here = path.abspath(path.dirname(__file__))
+
+# Get the long description from the README file
+with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
     name='autology',
-    version='0.4.0dev',
+    version='0.4.0',
     packages=find_packages(),
     url='https://github.com/MeerkatLabs/autology/',
     license='MIT',
     author='Robert Robinson',
     author_email='rerobins@meerkatlabs.org',
     description='File-based life log',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     python_requires='>=3.6, <4',
     classifiers=[
         'Environment :: Console',
-        'Development Status :: 1 - Planning',
+        'Development Status :: 3 - Alpha',
         'Programming Language :: Python :: 3.6',
         'License :: OSI Approved :: MIT License',
         'Topic :: Text Processing'
@@ -70,5 +79,10 @@ setup(
         # File processors that are loaded in
         'autology_file_processors': ['markdown=autology.utilities.processors.markdown:register',
                                      'yaml=autology.utilities.processors.yaml:register']
-    }
+    },
+
+    project_urls={
+        'Bug Reports': 'https://github.com/MeerkatLabs/autology/issues',
+        'Source': 'https://github.com/MeerkatLabs/autology',
+    },
 )
