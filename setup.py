@@ -4,12 +4,12 @@ from os import path
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
     name='autology',
-    version='0.4.0',
+    version='0.5.0dev',
     packages=find_packages(),
     url='https://github.com/MeerkatLabs/autology/',
     license='MIT',
@@ -17,7 +17,6 @@ setup(
     author_email='rerobins@meerkatlabs.org',
     description='File-based life log',
     long_description=long_description,
-    long_description_content_type='text/markdown',
     python_requires='>=3.6, <4',
     classifiers=[
         'Environment :: Console',
