@@ -14,6 +14,7 @@ from autology import topics
 
 logger = logging.getLogger(__name__)
 
+
 class MetaKeys:
     # Current version allowed by
     CURRENT_FILE_VERSION = Version.coerce('0.2.0')
@@ -134,8 +135,10 @@ def walk_log_files(directories):
 
         if hasattr(loaded_entries, 'append'):
             for entry in loaded_entries:
+                logger.debug('Processing file part: {}'.format(entry.file))
                 yield entry
         else:
+            logger.debug('Processing file: {}'.format(loaded_entries.file))
             yield loaded_entries
 
 

@@ -55,6 +55,7 @@ setup(
                              'project_report=autology.reports.project:register_plugin',
                              'simple=autology.reports.simple:register_plugin',
                              'exercise=autology.reports.exercise.exercise:register_plugin',
+                             'logging=autology.reports.logging:register_plugin',
                              ],
 
         # Commands that are defined as execution points.  These are methods that take an arg parser as it's only

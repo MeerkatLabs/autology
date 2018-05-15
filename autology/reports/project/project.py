@@ -50,6 +50,7 @@ def _build_report():
         if organization:
             organization.setdefault('projects', []).append(project)
         else:
+            logger.warning('Orphaned Project: {}'.format(project['id']))
             orphaned_projects.append(project)
 
         # Sort the logs that are stored on the project
@@ -132,6 +133,7 @@ def _process_markdown(post):
         if log_end_date:
             duration = log_end_date - log_date
         else:
+            logger.warning('File: {} doesn\'t have an end time'.format(post.file))
             duration = datetime.timedelta(hours=1)
 
         time_on_project = project_definition.get('duration', datetime.timedelta())
