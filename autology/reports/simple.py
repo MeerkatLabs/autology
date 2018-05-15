@@ -13,7 +13,7 @@ from autology.reports.models import Report
 from autology.utilities.log_file import MetaKeys
 from autology.utilities.processors import markdown as md_loader
 
-DayReport = namedtuple('DayReport', 'date url num_entries')
+DayReport = namedtuple('DayReport', 'date num_entries')
 
 _defined_plugins = []
 
@@ -105,10 +105,10 @@ class SimpleReportPlugin:
         """Publish the content of the collated day together."""
         # Only if there is content to publish
         if self._day_content:
-            url = publish(*self.day_template_path,
+            publish(*self.day_template_path,
                           entries=sorted(self._day_content, key=lambda x: x.metadata[MetaKeys.TIME]),
                           date=date, id=self.id, name=self.name, description=self.description)
-            self._dates.append(DayReport(date=datetime.combine(date=date, time=time.min), url=url,
+            self._dates.append(DayReport(date=datetime.combine(date=date, time=time.min),
                                          num_entries=len(self._day_content)))
 
     def _end_processing(self):
@@ -122,7 +122,7 @@ class SimpleReportPlugin:
             max_entries = 0
             max_year = min_year = datetime.now().year
 
-        url = publish(*self.index_template_path, dates=self._dates, max_entries=max_entries,
-                      max_year=max_year, min_year=min_year,
-                      id=self.id, name=self.name, description=self.description)
-        topics.Reporting.REGISTER_REPORT.publish(report=Report(self.name, self.description, url))
+        publish(*self.index_template_path, dates=self._dates, max_entries=max_entries, max_year=max_year,
+                min_year=min_year, id=self.id, name=self.name, description=self.description)
+        topics.Reporting.REGISTER_REPORT.publish(report=Report(self.name, self.description, self.index_template_path,
+                                                               {'id': self.id}))

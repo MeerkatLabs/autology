@@ -72,9 +72,8 @@ class TimelineReport(SimpleReportPlugin):
                                                 time=end_time - start_time)
 
                 # Copy the gpx file so that it can be referenced by the entry metadata
-                output_url = publishing.copy_file(gpx_file, 'exercise', 'data_file', date=start_time, id=self.id,
-                                                  file_name=gpx_file.name)
-                entry.metadata['gpx_url'] = output_url
+                publishing.copy_file(gpx_file, 'exercise', 'data_file', date=start_time, id=self.id,
+                                     file_name=gpx_file.name)
 
             except gpxpy.gpx.GPXXMLSyntaxException:
                 logger.exception('Cannot import file: {}'.format(gpx_file))

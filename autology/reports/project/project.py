@@ -6,6 +6,7 @@ from autology import topics
 from autology.publishing import publish
 from autology.reports.models import Report
 from autology.utilities.log_file import MetaKeys
+from autology.utilities.pagination import pagination
 
 try:
     from yaml import CLoader as Loader
@@ -52,11 +53,24 @@ def _build_report():
             orphaned_projects.append(project)
 
         # Sort the logs that are stored on the project
-        project['log'] = sorted(project.get('log', []), key=lambda x: x.metadata['time'])
+        project['log'] = sorted(project.get('log', []), key=lambda x: x.metadata['time'], reverse=True)
 
-        # Now generate a report for each of the projects.
-        url = publish('project', 'project', project=project)
-        project['url'] = url
+        logger.debug('Publishing: {} length: {}'.format(project['id'], len(project['log'])))
+
+        pagination_data = pagination(project['log'])
+
+        logger.debug('Publishing: {} pagination data: {} length: {}'.format(project['id'], len(pagination_data), len(project['log'])))
+
+        if pagination_data:
+            # Publish the first page
+            publish('project', 'project', project=project, pagination=pagination_data[0])
+
+            # Publish the rest of the data
+            for page_data in pagination_data[1:]:
+                # Now generate a report for each of the projects.
+                logger.debug('publishing page: {} {}'.format(project['id'], page_data['page_number']))
+                publish('project', 'project_pagination', project=project, pagination=page_data,
+                        page_number=page_data['page_number'])
 
     main_context = {
         'projects': _defined_projects.values(),
@@ -67,8 +81,9 @@ def _build_report():
     if orphaned_projects:
         main_context['orphaned_projects'] = orphaned_projects
 
-    url = publish('project', 'index', **main_context)
-    topics.Reporting.REGISTER_REPORT.publish(report=Report('Project', 'List of all project files', url))
+    publish('project', 'index', **main_context)
+    topics.Reporting.REGISTER_REPORT.publish(report=Report('Project', 'List of all project files', ['project', 'index'],
+                                                           {}))
 
 
 def process_file(entry):

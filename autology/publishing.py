@@ -60,8 +60,10 @@ def _initialize():
     )
 
     # Load up the custom filters
-    _environment.filters['autology_url'] = url_filter
     _environment.filters['markdown'] = markdown_filter
+
+    # Load up the global functions
+    _environment.globals.update({'url': generate_url})
 
     # Verify that the output directory exists before starting to write out the content
     _output_path = pathlib.Path(configuration_settings.publishing.output)
@@ -88,8 +90,6 @@ def publish(*args, context=None, **kwargs):
     # Verify that the path is possible and write out the file
     output_file.parent.mkdir(exist_ok=True, parents=True)
     output_file.write_text(output_content)
-
-    return output_file.relative_to(_output_path)
 
 
 def _build_context(context=None, **kwargs):
@@ -143,15 +143,23 @@ def copy_file(file, *args, context=None, **kwargs):
     output_file.parent.mkdir(exist_ok=True, parents=True)
     shutil.copy(str(file), str(output_file))
 
-    return output_file.relative_to(_output_path)
 
-
-def url_filter(url):
-    """Filter that will prepend the URL root for links in order to put the log in a directory on a web server."""
+def generate_url(*args, **kwargs):
+    """
+    Generate a URL based on the path and the context provided.
+    :param args: string containing the template definition path.
+    :param kwargs: dictionary containing the context to use when generating the file location.
+    :return: string containing URL to be used.
+    """
     config = get_configuration()
+    root = ""
     if config.publishing.url_root:
-        return "{}{}".format(get_configuration().publishing.url_root, url)
-    return url
+        root = config.publishing.url_root
+
+    template_definition = _find_template(*args)
+    output_file = template_definition['destination'].format(**kwargs)
+
+    return root + output_file
 
 
 def markdown_filter(content):
