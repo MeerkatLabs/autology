@@ -127,7 +127,13 @@ def _process_markdown(post):
         # Calculate how long the event lasts
         log_date = post.metadata[log_file.MetaKeys.TIME]
         log_end_date = post.metadata[log_file.MetaKeys.END_TIME]
-        duration = log_end_date - log_date
+
+        # Check to see if the end date is defined before doing the math, otherwise just use a duration of an hour
+        if log_end_date:
+            duration = log_end_date - log_date
+        else:
+            duration = datetime.timedelta(hours=1)
+
         time_on_project = project_definition.get('duration', datetime.timedelta())
         project_definition['duration'] = time_on_project + duration
 

@@ -4,11 +4,14 @@ markdown file, as well as a means of translating the data into a data definition
 
 This will be registered in the generator as part of the report initialization plugin.
 """
+import yaml.scanner
 import frontmatter
+import logging
 
 from autology.utilities import log_file
 
 MIME_TYPE = 'text/markdown'
+logger = logging.getLogger(__name__)
 
 
 def load_file(path):
@@ -19,7 +22,11 @@ def load_file(path):
     :return:
     """
     with path.open() as loaded_file:
-        entry = frontmatter.load(loaded_file)
+        try:
+            entry = frontmatter.load(loaded_file)
+        except yaml.scanner.ScannerError:
+            logger.exception('Error processing file: {}'.format(path))
+            raise
 
     log_file.process_datetimes(entry.metadata)
 

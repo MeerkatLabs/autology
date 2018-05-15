@@ -13,7 +13,7 @@ from autology.reports.models import Report
 from autology.utilities.log_file import MetaKeys
 from autology.utilities.processors import markdown as md_loader
 
-DayReport = namedtuple('DayReport', 'date num_entries')
+DayReport = namedtuple('DayReport', 'date entries prev next')
 
 _defined_plugins = []
 
@@ -44,16 +44,16 @@ def _initialize():
 
 
 class SimpleReportPlugin:
-
     day_template_path = ['simple', 'day']
     index_template_path = ['simple', 'index']
 
     def __init__(self, _id, _name, _description):
         # The content that is stored for each individual day
-        self._day_content = []
+        self._day_content = None
+        self._previous_content = None
 
         # Dates that have been collected
-        self._dates = []
+        self._reports = []
         self.id = _id
         self.name = _name
         self.description = _description
@@ -70,11 +70,18 @@ class SimpleReportPlugin:
 
     def _start_day_processing(self, date):
         """
-        Event handler that will be notified when a day's files are starting to be processed.
+        Event handler that will be notified when a day's files are starting to be processed.  This doesn't mean that
+        there were actually files processed for this date, just that the date was started.
         :param date: the day that is being processed.
         :return:
         """
-        self._day_content = []
+
+        # Store off the current date value, and copy the current date report to previous date report if there is any
+        # content to copy off (based on the num_entries in the report).
+        if self._day_content and self._day_content.entries:
+            self._previous_content = self._day_content
+
+        self._day_content = DayReport(datetime.combine(date=date, time=time.min), [], None, None)
 
     def test_activities(self, activities_list):
         return self.id in activities_list
@@ -91,7 +98,20 @@ class SimpleReportPlugin:
         activities_list = entry.metadata.get(MetaKeys.ACTIVITIES, [])
         if self.test_activities(activities_list):
             self._preprocess_entry(entry)
-            self._day_content.append(entry)
+            self._day_content.entries.append(entry)
+
+            # Since there is an entry that will be displayed for this day, can now see if the previous entry should be
+            # published or not.
+            if self._previous_content:
+                # Set current report's previous to the previous content
+                self._day_content = self._day_content._replace(prev=self._previous_content)
+
+                # Prepare previous content for publishing
+                self._previous_content = self._previous_content._replace(next=self._day_content)
+                self._publish_report(self._previous_content)
+
+                # Reset so that it isn't published multiple times
+                self._previous_content = None
 
     def _preprocess_entry(self, entry):
         """
@@ -103,26 +123,31 @@ class SimpleReportPlugin:
 
     def _end_day_processing(self, date=None):
         """Publish the content of the collated day together."""
-        # Only if there is content to publish
-        if self._day_content:
-            publish(*self.day_template_path,
-                          entries=sorted(self._day_content, key=lambda x: x.metadata[MetaKeys.TIME]),
-                          date=date, id=self.id, name=self.name, description=self.description)
-            self._dates.append(DayReport(date=datetime.combine(date=date, time=time.min),
-                                         num_entries=len(self._day_content)))
+        pass
+
+    def _publish_report(self, report):
+        sorted(report.entries, key=lambda x: x.metadata[MetaKeys.TIME])
+        publish(*self.day_template_path, report=report, id=self.id, name=self.name, description=self.description)
+        self._reports.append(report)
 
     def _end_processing(self):
         """All of the input files have been processed, so now need to build the master input value."""
+        # Check to see if there is still a current_content or a previous_content that needs to be published
+        if self._previous_content:
+            self._publish_report(self._previous_content)
+        elif self._day_content:
+            self._publish_report(self._day_content)
+
         # Iterate through all of the values and count entries per day so can determine a decent legend value
-        if self._dates:
-            max_entries = max(self._dates, key=lambda x: x.num_entries).num_entries
-            max_year = max(self._dates, key=lambda x: x.date).date.year
-            min_year = min(self._dates, key=lambda x: x.date).date.year
+        if self._reports:
+            max_entries = len(max(self._reports, key=lambda x: len(x.entries)).entries)
+            max_year = max(self._reports, key=lambda x: x.date).date.year
+            min_year = min(self._reports, key=lambda x: x.date).date.year
         else:
             max_entries = 0
             max_year = min_year = datetime.now().year
 
-        publish(*self.index_template_path, dates=self._dates, max_entries=max_entries, max_year=max_year,
+        publish(*self.index_template_path, reports=self._reports, max_entries=max_entries, max_year=max_year,
                 min_year=min_year, id=self.id, name=self.name, description=self.description)
         topics.Reporting.REGISTER_REPORT.publish(report=Report(self.name, self.description, self.index_template_path,
                                                                {'id': self.id}))
