@@ -1,9 +1,8 @@
 """Sub-command that will export all of the log generation templates to a directory."""
 import frontmatter
-from pkg_resources import iter_entry_points
 
 from autology.configuration import get_configuration_root
-from autology.utilities.plugins import TEMPLATES_ENTRY_POINT
+from autology.utilities.plugins import load_input_templates
 
 
 def register_command(subparser):
@@ -17,7 +16,7 @@ def register_command(subparser):
 
 def _main(args):
     """Dumps all of the templates to the output directory provided by args."""
-    loaded_templates = {ep.name: ep.load() for ep in iter_entry_points(group=TEMPLATES_ENTRY_POINT)}
+    loaded_templates = load_input_templates()
 
     output_directory = get_configuration_root() / args.output_dir
 

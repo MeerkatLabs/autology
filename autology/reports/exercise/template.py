@@ -1,7 +1,11 @@
 """Template for the project log files."""
 import pathlib
 
-import gpxpy
+try:
+    import gpxpy
+except ImportError:
+    gpxpy = None
+
 import pytz
 import tzlocal
 import logging
@@ -82,9 +86,12 @@ def _process_gpx_file(file=None):
         logger.exception('Cannot import file: {}'.format(file))
 
 
-gpx_data = Template(gpx_template_start, gpx_template_end,
-                    'Inherits from timeline base but provides the means of linking in gpx files for displaying maps, '
-                    'and activities.',
-                    dict([
-                        ('gpx_file', 'Path to GPX File')
-                    ], **timeline_base.arguments))
+if gpxpy:
+    gpx_data = Template(gpx_template_start, gpx_template_end,
+                        'Inherits from timeline base but provides the means of linking in gpx files for displaying '
+                        'maps, and activities.',
+                        dict([
+                            ('gpx_file', 'Path to GPX File')
+                        ], **timeline_base.arguments))
+else:
+    gpx_data = None

@@ -4,7 +4,11 @@ git is the storage module, but there is not a reason why another storage impleme
 
 Current implementation assumes that git is initialized in the project directory, and has a remote named origin.
 """
-import git
+try:
+    import git
+except ImportError:
+    print('Git not defined')
+    git = None
 
 from autology import topics
 from autology.configuration import get_configuration_root, add_default_configuration, get_configuration
@@ -15,13 +19,15 @@ _repo = None
 
 def load():
     """Initializes the git module for the directory that the configuration file is currently being stored in."""
-    topics.Application.INITIALIZE.subscribe(_initialization)
+    # Check to see if git is defined before initializing this plugin
+    if git:
+        topics.Application.INITIALIZE.subscribe(_initialization)
 
-    add_default_configuration('git', {
-        'enabled': False,
-        'remote': 'origin',
-        'refspec': 'master',
-    })
+        add_default_configuration('git', {
+            'enabled': False,
+            'remote': 'origin',
+            'refspec': 'master',
+        })
 
 
 def _initialization():

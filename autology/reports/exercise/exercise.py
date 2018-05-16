@@ -4,8 +4,13 @@ the gpx files that have been stored.
 """
 from autology import topics, publishing
 from autology.utilities import log_file
-import gpxpy
-import gpxpy.gpx
+
+try:
+    import gpxpy
+    import gpxpy.gpx
+except ImportError:
+    gpxpy = None
+
 import pytz
 import logging
 from autology.reports.simple import SimpleReportPlugin
@@ -45,6 +50,10 @@ class TimelineReport(SimpleReportPlugin):
 
     def _preprocess_entry(self, entry):
         """Currently only handling entries that contain data about gpx files."""
+        # If gpxpy is not defined, then can skip the processing of the gpx file.
+        if gpxpy is None:
+            return
+
         if GPX_FILE in entry.metadata:
             # Need to find the file pointed to in the entry by finding
             gpx_file = log_file.find_file(entry.metadata[GPX_FILE])

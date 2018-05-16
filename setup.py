@@ -34,16 +34,22 @@ setup(
         'python-frontmatter>=0.4.2,<0.5',
         'PyYAML>=3.12,<4',
         'requests>=2.18.4',
-        'GitPython>=2.1.7<3',
         'pytz>=2017.3<2018',
         'tzlocal>=1.5.1<2',
         'semantic-version>=2.6.0<3',
-        'gpxpy>=1.1.2<2',
     ],
 
     extras_require={
-        'dev': ['pylint>=1.7.4'],
+        'dev': [
+            'pylint>=1.7.4'
+        ],
         'test': [],
+        'git': [
+            'GitPython>=2.1.7<3',
+        ],
+        'gpx': [
+            'gpxpy>=1.1.2<2',
+        ]
     },
 
     entry_points={

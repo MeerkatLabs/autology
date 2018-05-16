@@ -8,7 +8,7 @@ from autology import topics
 from autology.configuration import add_default_configuration, get_configuration
 from autology.storage import load as load_storage_plugin
 from autology.utilities.log_file import get_file_processor
-from autology.utilities.plugins import TEMPLATES_ENTRY_POINT, FILE_PROCESSOR_ENTRY_POINT
+from autology.utilities.plugins import load_input_templates, FILE_PROCESSOR_ENTRY_POINT
 
 
 def register_command(subparser):
@@ -48,7 +48,7 @@ def _configure():
 
 def _main(args):
     """ Create a new note file in the correct location. """
-    loaded_templates = {ep.name: ep.load() for ep in iter_entry_points(group=TEMPLATES_ENTRY_POINT)}
+    loaded_templates = load_input_templates()
 
     if args.template_list:
         print('Available templates:')
