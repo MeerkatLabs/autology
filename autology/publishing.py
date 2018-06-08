@@ -36,6 +36,10 @@ def load():
                               })
 
 
+class TemplateLookupError(LookupError):
+    pass
+
+
 def _initialize():
     """
     Initialize the jinja environment.
@@ -79,7 +83,11 @@ def publish(*args, context=None, **kwargs):
     :return:
     """
     context = _build_context(context=context, **kwargs)
-    template_definition = _find_template(*args)
+    try:
+        template_definition = find_template(*args)
+    except TemplateLookupError:
+        logger.exception('Could not find template')
+        raise
 
     # Load the template and render to the destination file defined in the template_definition
     root_template = _environment.get_template(str(template_definition['template']))
@@ -111,16 +119,16 @@ def _build_context(context=None, **kwargs):
     return context
 
 
-def _find_template(*args):
+def find_template(*args):
     """Find the template definition object"""
     template_definition = _template_configuration.get('templates', {})
     for template_path in args:
         try:
             template_definition = template_definition[template_path]
-        except KeyError as e:
-            logger.exception('Cannot find template definition: {} '
-                             'in template definitions: {}'.format(args, _template_configuration.get('templates', {})))
-            raise
+        except KeyError:
+            logger.debug(f"Cannot find template definition: {args} in template definitions: "
+                         f"{_template_configuration.get('templates', {})}")
+            raise TemplateLookupError(f'Cannot find template definition: {args}')
 
     return template_definition
 
@@ -135,7 +143,11 @@ def copy_file(file, *args, context=None, **kwargs):
     :return:
     """
     context = _build_context(context=context, **kwargs)
-    template_definition = _find_template(*args)
+    try:
+        template_definition = find_template(*args)
+    except TemplateLookupError:
+        logger.exception('Could not find template')
+        raise
 
     output_file = template_definition['destination'].format(**context)
     output_file = _output_path / output_file
@@ -156,7 +168,12 @@ def generate_url(*args, **kwargs):
     if config.publishing.url_root:
         root = config.publishing.url_root
 
-    template_definition = _find_template(*args)
+    try:
+        template_definition = find_template(*args)
+    except TemplateLookupError:
+        logger.exception('Could not find template')
+        raise
+
     output_file = template_definition['destination'].format(**kwargs)
 
     return root + output_file

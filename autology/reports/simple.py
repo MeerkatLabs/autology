@@ -8,7 +8,7 @@ from collections import namedtuple
 
 from autology import topics
 from autology.configuration import add_default_configuration, get_configuration
-from autology.publishing import publish
+from autology.publishing import publish, find_template, TemplateLookupError
 from autology.reports.models import Report
 from autology.utilities.log_file import MetaKeys
 from autology.utilities.processors import markdown as md_loader
@@ -28,7 +28,7 @@ def register_plugin():
     # TODO: Update to be a bit more configurable, change activities to definitions, then allow for activities to be
     # defined as part of the definition.
     add_default_configuration('simple', {
-        'activities': []
+        'definitions': []
     })
 
 
@@ -37,26 +37,40 @@ def _initialize():
     Look in the configuration and create a new SimpleReportPlugin for all of the activities that are defined.
     :return:
     """
-    for config in get_configuration().simple.activities:
-        plugin = SimpleReportPlugin(config.id, config.name, config.description)
+    for config in get_configuration().simple.definitions:
+        plugin = SimpleReportPlugin(config.id, config.name, config.description, config.activities)
         plugin.initialize()
         _defined_plugins.append(plugin)
 
 
 class SimpleReportPlugin:
-    day_template_path = ['simple', 'day']
-    index_template_path = ['simple', 'index']
 
-    def __init__(self, _id, _name, _description):
+    def __init__(self, id, name, description, activities=None):
+        """
+        Initialize the report plugin.
+        :param id: identifier for the report
+        :param name: human readable name for the report
+        :param description: description for the report
+        :param activities: activities associated with this report type.
+        """
         # The content that is stored for each individual day
         self._day_content = None
         self._previous_content = None
 
         # Dates that have been collected
         self._reports = []
-        self.id = _id
-        self.name = _name
-        self.description = _description
+        self.id = id
+        self.name = name
+        self.description = description
+
+        if activities:
+            self.activities = activities
+        else:
+            self.activities = [self.id]
+
+        # Define template definitions so that they are looked up on first usage.
+        self._day_template = None
+        self._index_template = None
 
     def initialize(self):
         """
@@ -84,7 +98,14 @@ class SimpleReportPlugin:
         self._day_content = DayReport(datetime.combine(date=date, time=time.min), [], None, None)
 
     def test_activities(self, activities_list):
-        return self.id in activities_list
+        """
+        Test to see if activities will require that the entry be processed.  This is done by seeing if any of the
+        activities in the activities_list parameter are contained in the activities defined in the definition.
+        :param activities_list: activities associated with this entry
+        :return: if the entry should be processed or not
+        """
+        overlap_test = [a for a in activities_list if a in self.activities]
+        return len(overlap_test) > 0
 
     def _data_processor(self, entry):
         """
@@ -97,7 +118,7 @@ class SimpleReportPlugin:
 
         activities_list = entry.metadata.get(MetaKeys.ACTIVITIES, [])
         if self.test_activities(activities_list):
-            self._preprocess_entry(entry)
+            self.preprocess_entry(entry)
             self._day_content.entries.append(entry)
 
             # Since there is an entry that will be displayed for this day, can now see if the previous entry should be
@@ -113,7 +134,7 @@ class SimpleReportPlugin:
                 # Reset so that it isn't published multiple times
                 self._previous_content = None
 
-    def _preprocess_entry(self, entry):
+    def preprocess_entry(self, entry):
         """
         Process the entry before storing it in the day content for the value.
         :param entry:
@@ -127,7 +148,7 @@ class SimpleReportPlugin:
 
     def _publish_report(self, report):
         sorted(report.entries, key=lambda x: x.metadata[MetaKeys.TIME])
-        publish(*self.day_template_path, report=report, id=self.id, name=self.name, description=self.description)
+        publish(*self.day_template_path(), report=report, id=self.id, name=self.name, description=self.description)
         self._reports.append(report)
 
     def _end_processing(self):
@@ -147,7 +168,31 @@ class SimpleReportPlugin:
             max_entries = 0
             max_year = min_year = datetime.now().year
 
-        publish(*self.index_template_path, reports=self._reports, max_entries=max_entries, max_year=max_year,
+        publish(*self.index_template_path(), reports=self._reports, max_entries=max_entries, max_year=max_year,
                 min_year=min_year, id=self.id, name=self.name, description=self.description)
-        topics.Reporting.REGISTER_REPORT.publish(report=Report(self.name, self.description, self.index_template_path,
+        topics.Reporting.REGISTER_REPORT.publish(report=Report(self.name, self.description, self.index_template_path(),
                                                                {'id': self.id}))
+
+    def index_template_path(self):
+        """Retrieve the index template path for this report."""
+
+        if not self._index_template:
+            self._index_template = [self.id, 'index']
+            try:
+                find_template(*self._index_template)
+            except TemplateLookupError:
+                self._index_template = ['simple', 'index']
+
+        return self._index_template
+
+    def day_template_path(self):
+        """Retrieve the day template path for this report."""
+        if not self._day_template:
+            self._day_template = [self.id, 'day']
+            try:
+                find_template(*self._day_template)
+            except TemplateLookupError:
+                self._day_template = ['simple', 'day']
+
+        return self._day_template
+

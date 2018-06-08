@@ -41,8 +41,6 @@ class TimelineReport(SimpleReportPlugin):
     def __init__(self):
         """Overridden to set the day and index template paths."""
         super().__init__('timeline', 'Timeline', 'List of all report files')
-        self.day_template_path = ['timeline', 'day']
-        self.index_template_path = ['timeline', 'index']
 
     def test_activities(self, activities_list):
         """Overridden to process all of the log files that are passed in."""

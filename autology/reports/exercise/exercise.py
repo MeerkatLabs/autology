@@ -36,14 +36,12 @@ class TimelineReport(SimpleReportPlugin):
     def __init__(self):
         """Overridden to set the day and index template paths."""
         super().__init__('exercise', 'Exercise', 'List of all exercise related files')
-        self.day_template_path = ['exercise', 'day']
-        self.index_template_path = ['exercise', 'index']
 
     def test_activities(self, activities_list):
         """Overridden to process all of the log files that are passed in."""
         return EXERCISE_ACTIVITY in activities_list
 
-    def _preprocess_entry(self, entry):
+    def preprocess_entry(self, entry):
         """Currently only handling entries that contain data about gpx files."""
         if GPX_FILE in entry.metadata:
             # Need to find the file pointed to in the entry by finding

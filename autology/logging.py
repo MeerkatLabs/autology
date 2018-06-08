@@ -34,8 +34,6 @@ def configure_logging():
 
     logging_configuration = configuration.get('logging', {})
 
-    print('Logging_configuration: {}'.format(logging_configuration))
-
     if logging_configuration:
         logging.config.dictConfig(logging_configuration)
     else:
