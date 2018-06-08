@@ -46,6 +46,11 @@ def _main(args):
             current_date = entry.date.date()
             topics.Processing.DAY_START.publish(date=current_date)
 
+        # Pre-processing work here so that all of the plugins can add in their meta data before the entry
+        # gets published by the reports.  This allows for all of the metadata to be in each of the reports when
+        # they are generated into HTML.
+        topics.Processing.PREPROCESS_FILE.publish(entry=entry)
+
         # Send out the notification that the file should be processed
         topics.Processing.PROCESS_FILE.publish(entry=entry)
 

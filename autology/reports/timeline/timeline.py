@@ -5,13 +5,8 @@ Timeline report that will process all of the files into a timeline in order to b
 from collections import namedtuple
 
 from autology import topics
+from autology.reports.timeline.preprocessor.duration import pre_processor as _duration_preprocessor
 from autology.reports.simple import SimpleReportPlugin
-
-# The content that is stored for each individual day
-_day_content = []
-
-# Dates that have been collected
-_dates = []
 
 _report_plugin = None
 
@@ -34,6 +29,8 @@ def _initialize():
     global _report_plugin
     _report_plugin = TimelineReport()
     _report_plugin.initialize()
+
+    topics.Processing.PREPROCESS_FILE.subscribe(_duration_preprocessor)
 
 
 class TimelineReport(SimpleReportPlugin):

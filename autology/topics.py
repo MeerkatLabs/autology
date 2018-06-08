@@ -23,10 +23,19 @@ class Processing(PubSubEnumMixin, enum.Enum):
     """
     Enumeration that defines the lifecycle of processing the collection of files in the logs.
     DAY_START -
-      parameters: date - datetime.date object for the day that is being processed.
+      Event fired off when a new day is started for the log files.
+      parameters:
+        date - datetime.date object for the day that is being processed.
     DAY_END -
-      parameters: date - datetime.date object for the day that was processed.
+      Event fired off when a day is over for the log files.
+      parameters:
+        date - datetime.date object for the day that was processed.
+    PREPROCESS_FILE -
+      This should be used to populate any meta-data for the entries and not used to handle report building/construction.
+      parameters:
+        entry: autology.reports.models.Entry tuple
     PROCESS_FILE -
+      This should be used to populate the data for the reports and pages.
       parameters:
         entry: autology.reports.models.Entry tuple
     BEGIN -
@@ -38,6 +47,7 @@ class Processing(PubSubEnumMixin, enum.Enum):
     """
     DAY_START = 'day_start'
     DAY_END = 'day_end'
+    PREPROCESS_FILE = 'preprocess_file'
     PROCESS_FILE = 'process_file'
     BEGIN = 'begin'
     END = 'end'

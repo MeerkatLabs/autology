@@ -81,6 +81,7 @@ class SimpleReportPlugin:
         topics.Processing.PROCESS_FILE.subscribe(self._data_processor)
         topics.Processing.DAY_END.subscribe(self._end_day_processing)
         topics.Processing.END.subscribe(self._end_processing)
+        topics.Processing.PREPROCESS_FILE.subscribe(self._preprocess_entry)
 
     def _start_day_processing(self, date):
         """
@@ -107,6 +108,16 @@ class SimpleReportPlugin:
         overlap_test = [a for a in activities_list if a in self.activities]
         return len(overlap_test) > 0
 
+    def _test_entry(self, entry):
+        """Test to see if the entry should be processed or not.  Current implementation tests the activities list."""
+        activities_list = entry.metadata.get(MetaKeys.ACTIVITIES, [])
+        return self.test_activities(activities_list)
+
+    def _preprocess_entry(self, entry):
+        """Check to see if the entry should be preprocessed by this report, and then pre-process it."""
+        if self._test_entry(entry):
+            self.preprocess_entry(entry)
+
     def _data_processor(self, entry):
         """
         Checks to see if the data can be processed and stores any data required locally.
@@ -116,9 +127,7 @@ class SimpleReportPlugin:
         if entry.mime_type is not md_loader.MIME_TYPE:
             return
 
-        activities_list = entry.metadata.get(MetaKeys.ACTIVITIES, [])
-        if self.test_activities(activities_list):
-            self.preprocess_entry(entry)
+        if self._test_entry(entry):
             self._day_content.entries.append(entry)
 
             # Since there is an entry that will be displayed for this day, can now see if the previous entry should be

@@ -13,7 +13,6 @@ try:
 except ImportError:
     from yaml import Loader
 from dict_recursive_update import recursive_update as _r_update
-from autology.utilities import log_file
 
 # Constants:
 PROJECT_KEY = 'mkl-project'
@@ -125,22 +124,10 @@ def _process_markdown(post):
         project_log = project_definition.setdefault('log', [])
         project_log.append(post)
 
-        # Calculate how long the event lasts
-        log_date = post.metadata[log_file.MetaKeys.TIME]
-        log_end_date = post.metadata[log_file.MetaKeys.END_TIME]
-
-        # Check to see if the end date is defined before doing the math, otherwise just use a duration of an hour
-        if log_end_date:
-            duration = log_end_date - log_date
-        else:
-            logger.warning('File: {} doesn\'t have an end time'.format(post.file))
-            duration = datetime.timedelta(hours=1)
+        duration = post.metadata['duration']
 
         time_on_project = project_definition.get('duration', datetime.timedelta())
         project_definition['duration'] = time_on_project + duration
-
-        # Set the date values in the post to be the python objects instead of just strings
-        post.metadata['duration'] = duration
 
 
 def _process_yaml(documents):
