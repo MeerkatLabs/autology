@@ -19,7 +19,7 @@ def register_plugin():
 def _initialize():
     """Subscribe to the end of file processing so can publish the report."""
     global _initialized
-    topics.Processing.END.subscribe(_publish_report)
+    topics.Processing.BEGIN.subscribe(_publish_report)
     _initialized = True
 
 

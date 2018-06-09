@@ -77,11 +77,17 @@ class SimpleReportPlugin:
         Register for all of the required events that will be fired off by the main loop
         :return:
         """
+        topics.Processing.BEGIN.subscribe(self._begin_processing)
         topics.Processing.DAY_START.subscribe(self._start_day_processing)
         topics.Processing.PROCESS_FILE.subscribe(self._data_processor)
         topics.Processing.DAY_END.subscribe(self._end_day_processing)
         topics.Processing.END.subscribe(self._end_processing)
         topics.Processing.PREPROCESS_FILE.subscribe(self._preprocess_entry)
+
+    def _begin_processing(self):
+        """Record the report that is being generated regardless of whether it has data or not."""
+        topics.Reporting.REGISTER_REPORT.publish(report=Report(self.name, self.description, self.index_template_path(),
+                                                               {'id': self.id}))
 
     def _start_day_processing(self, date):
         """
@@ -179,8 +185,6 @@ class SimpleReportPlugin:
 
         publish(*self.index_template_path(), reports=self._reports, max_entries=max_entries, max_year=max_year,
                 min_year=min_year, id=self.id, name=self.name, description=self.description)
-        topics.Reporting.REGISTER_REPORT.publish(report=Report(self.name, self.description, self.index_template_path(),
-                                                               {'id': self.id}))
 
     def index_template_path(self):
         """Retrieve the index template path for this report."""

@@ -38,6 +38,12 @@ def _initialize():
     """ Register for all of the required events that will be fired off by the main loop """
     topics.Processing.PROCESS_FILE.subscribe(process_file)
     topics.Processing.END.subscribe(_build_report)
+    topics.Processing.BEGIN.subscribe(_register_report)
+
+
+def _register_report():
+    topics.Reporting.REGISTER_REPORT.publish(report=Report('Project', 'List of all project files', ['project', 'index'],
+                                                           {}))
 
 
 def _build_report():
@@ -82,8 +88,6 @@ def _build_report():
         main_context['orphaned_projects'] = orphaned_projects
 
     publish('project', 'index', **main_context)
-    topics.Reporting.REGISTER_REPORT.publish(report=Report('Project', 'List of all project files', ['project', 'index'],
-                                                           {}))
 
 
 def process_file(entry):
