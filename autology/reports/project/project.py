@@ -42,8 +42,8 @@ def _initialize():
 
 
 def _register_report():
-    topics.Reporting.REGISTER_REPORT.publish(report=Report('Project', 'List of all project files', ['project', 'index'],
-                                                           {}))
+    topics.Reporting.REGISTER_REPORT.publish(report=Report('Project', 'List of all project files',
+                                                           ['project', 'index'], {}))
 
 
 def _build_report():

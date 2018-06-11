@@ -74,6 +74,14 @@ def _initialize():
     _output_path.mkdir(exist_ok=True)
 
 
+def add_template_variable(report_name, variable_name, value):
+    """
+    Add a variable to the template configuration.  Uses the report_name to namespace the variable name definition.
+    """
+    template_variables = _template_configuration.setdefault('variables', {})
+    template_variables.setdefault('report_vars', {}).setdefault(report_name, {})[variable_name] = value
+
+
 def publish(*args, context=None, **kwargs):
     """
     Notify jinja to publish the template to the output_file location with all of the context provided.

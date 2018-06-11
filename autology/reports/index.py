@@ -2,7 +2,7 @@
 import datetime
 
 from autology import topics
-from autology.publishing import publish
+from autology.publishing import publish, add_template_variable
 
 # Collection of all of the reports that have been filed by other plugins
 _reports = []
@@ -34,6 +34,8 @@ def _initialize():
 def _new_report_handler(report=None):
     """Build up a list of all the report objects that have been defined."""
     _reports.append(report)
+    _reports.sort(key=lambda x: x.name)
+    add_template_variable('index', 'reports', _reports)
 
 
 def _finish_processing():
